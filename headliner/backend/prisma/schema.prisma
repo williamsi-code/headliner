@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  username      String       @unique
+  pinHash       String
+  parentPinHash String?
+  dailyGoal     Int          @default(6)
+  createdAt     DateTime     @default(now())
+  band          Band?
+  tasks         Task[]
+  completions   Completion[]
+}
+
+model Band {
+  id           Int            @id @default(autoincrement())
+  userId       Int            @unique
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  genre        String
+  members      Json
+  fans         Int            @default(0)
+  money        Int            @default(10)
+  skill        Int            @default(5)
+  creativity   Int            @default(5)
+  stage        Int            @default(5)
+  energy       Int            @default(3)
+  streak       Int            @default(0)
+  bestStreak   Int            @default(0)
+  lastGoalDate String?
+  lastSeenDate String?
+  gear         Json           @default("[]")
+  gigsPlayed   Int            @default(0)
+  createdAt    DateTime       @default(now())
+  songs        Song[]
+  events       Event[]
+  plays        MinigamePlay[]
+}
+
+model Task {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  icon        String
+  category    String
+  stat        String
+  amount      Int
+  active      Boolean      @default(true)
+  sort        Int          @default(0)
+  completions Completion[]
+
+  @@index([userId])
+}
+
+model Completion {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId       Int
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  date         String
+  statGained   Int
+  energyGained Int
+  createdAt    DateTime @default(now())
+
+  @@unique([taskId, date])
+  @@index([userId, date])
+}
+
+model Song {
+  id        Int      @id @default(autoincrement())
+  bandId    Int
+  band      Band     @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  title     String
+  quality   Int
+  fans      Int
+  date      String
+  createdAt DateTime @default(now())
+
+  @@index([bandId])
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  bandId    Int
+  band      Band     @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  date      String
+  kind      String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([bandId, createdAt])
+}
+
+model MinigamePlay {
+  id        Int      @id @default(autoincrement())
+  bandId    Int
+  band      Band     @relation(fields: [bandId], references: [id], onDelete: Cascade)
+  game      String
+  score     Int
+  date      String
+  createdAt DateTime @default(now())
+
+  @@index([bandId, game])
+}
